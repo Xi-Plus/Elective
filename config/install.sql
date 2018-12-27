@@ -9,9 +9,15 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 
+CREATE TABLE `admin` (
+  `account` varchar(20) COLLATE utf8_bin NOT NULL,
+  `password` varchar(255) COLLATE utf8_bin NOT NULL,
+  `name` varchar(30) COLLATE utf8_bin NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
 CREATE TABLE `class` (
   `classid` varchar(10) COLLATE utf8_bin NOT NULL,
-  `name` varchar(10) COLLATE utf8_bin NOT NULL,
+  `name` varchar(20) COLLATE utf8_bin NOT NULL,
   `credit` tinyint(4) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
@@ -27,12 +33,23 @@ CREATE TABLE `elective` (
   `score` int(11) NOT NULL DEFAULT '-1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+CREATE TABLE `login_session` (
+  `type` tinyint(1) NOT NULL,
+  `account` varchar(20) NOT NULL,
+  `cookie` varchar(32) NOT NULL,
+  `time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 CREATE TABLE `student` (
   `stuid` varchar(20) COLLATE utf8_bin NOT NULL,
   `name` varchar(10) COLLATE utf8_bin NOT NULL,
-  `depid` varchar(10) COLLATE utf8_bin NOT NULL
+  `depid` varchar(10) COLLATE utf8_bin NOT NULL,
+  `password` varchar(255) COLLATE utf8_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+
+ALTER TABLE `admin`
+  ADD PRIMARY KEY (`account`);
 
 ALTER TABLE `class`
   ADD PRIMARY KEY (`classid`);
@@ -43,6 +60,9 @@ ALTER TABLE `department`
 ALTER TABLE `elective`
   ADD PRIMARY KEY (`stuid`,`classid`),
   ADD KEY `classid` (`classid`);
+
+ALTER TABLE `login_session`
+  ADD PRIMARY KEY (`cookie`);
 
 ALTER TABLE `student`
   ADD PRIMARY KEY (`stuid`),
