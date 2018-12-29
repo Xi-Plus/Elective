@@ -106,14 +106,27 @@ if (!$U["islogin"]) {
 	if (isset($D["department"][$_POST["delete"]])) {
 		$sth = $G["db"]->prepare("DELETE FROM `department` WHERE `depid` = :depid");
 		$sth->bindValue(":depid", $_POST["delete"]);
-		$sth->execute();
-		?>
-		<div class="alert alert-success alert-dismissible" role="alert">
-			<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-			已刪除科系 <?=htmlentities($D["department"][$_POST["delete"]]["name"])?>
-		</div>
-		<?php
-		unset($D["department"][$_POST["delete"]]);
+		$res = $sth->execute();
+		if ($res === false) {
+			?>
+			<div class="alert alert-danger alert-dismissible" role="alert">
+				<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				刪除科系 <?=htmlentities($D["department"][$_POST["delete"]]["name"])?> 失敗<?php
+				if ($sth->errorCode() == "23000") {
+					echo "，仍有學生屬於此科系";
+				}
+				?>
+			</div>
+			<?php
+		} else {
+			?>
+			<div class="alert alert-success alert-dismissible" role="alert">
+				<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				已刪除科系 <?=htmlentities($D["department"][$_POST["delete"]]["name"])?>
+			</div>
+			<?php
+			unset($D["department"][$_POST["delete"]]);
+		}
 	} 
 }
 
