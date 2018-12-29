@@ -24,7 +24,8 @@ CREATE TABLE `class` (
 CREATE TABLE `class_time` (
   `classid` varchar(10) COLLATE utf8_bin NOT NULL,
   `day` tinyint(4) NOT NULL,
-  `period` tinyint(4) NOT NULL
+  `period1` tinyint(4) NOT NULL,
+  `period2` tinyint(4) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 CREATE TABLE `department` (
