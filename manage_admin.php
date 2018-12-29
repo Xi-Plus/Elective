@@ -109,6 +109,13 @@ if (!$U["islogin"]) {
 			管理員 <?=$_POST["delete"]?> 不存在
 		</div>
 		<?php
+	} else if ($_POST["delete"] == $U["account"]) {
+		?>
+		<div class="alert alert-danger alert-dismissible" role="alert">
+			<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			您不能刪除自己
+		</div>
+		<?php
 	} else {
 		$sth = $G["db"]->prepare("DELETE FROM `admin` WHERE `account` = :account");
 		$sth->bindValue(":account", $_POST["delete"]);
@@ -143,7 +150,13 @@ if ($showform) {
 						<td><?=htmlentities($account["account"])?></td>
 						<td><?=htmlentities($account["name"])?></td>
 						<td>
+							<?php
+							if ($account["account"] != $U["account"]) {
+							?>
 							<button type="submit" name="delete" value="<?=$account["account"]?>" class="btn btn-danger btn-sm"><i class="fa fa-trash" aria-hidden="true"></i> 刪除</button>
+							<?php
+							}
+							?>
 						</td>
 					</tr>
 					<?php
