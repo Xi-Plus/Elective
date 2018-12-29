@@ -21,6 +21,12 @@ CREATE TABLE `class` (
   `credit` tinyint(4) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+CREATE TABLE `class_time` (
+  `classid` varchar(10) COLLATE utf8_bin NOT NULL,
+  `day` tinyint(4) NOT NULL,
+  `period` tinyint(4) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
 CREATE TABLE `department` (
   `depid` varchar(10) COLLATE utf8_bin NOT NULL,
   `name` varchar(10) COLLATE utf8_bin NOT NULL,
@@ -54,6 +60,9 @@ ALTER TABLE `admin`
 ALTER TABLE `class`
   ADD PRIMARY KEY (`classid`);
 
+ALTER TABLE `class_time`
+  ADD KEY `classid` (`classid`);
+
 ALTER TABLE `department`
   ADD PRIMARY KEY (`depid`);
 
@@ -68,6 +77,9 @@ ALTER TABLE `student`
   ADD PRIMARY KEY (`stuid`),
   ADD KEY `depid` (`depid`);
 
+
+ALTER TABLE `class_time`
+  ADD CONSTRAINT `class_time_ibfk_1` FOREIGN KEY (`classid`) REFERENCES `class` (`classid`);
 
 ALTER TABLE `elective`
   ADD CONSTRAINT `elective_ibfk_2` FOREIGN KEY (`classid`) REFERENCES `class` (`classid`),
