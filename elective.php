@@ -21,6 +21,30 @@ body {
 </head>
 <body>
 <?php
+if ($U["accttype"] == "student") {
+	$sth = $G["db"]->prepare('SELECT * FROM ( SELECT * FROM `elective` WHERE `stuid` = :stuid ORDER BY `classid` ) `elective` LEFT JOIN `class` ON `elective`.`classid` = `class`.`classid`');
+	$sth->bindValue(":stuid", $U["account"]);
+	$sth->execute();
+	$row = $sth->fetchAll(PDO::FETCH_ASSOC);
+	$D["elective"] = [];
+	$D["calendar"] = [];
+	foreach ($row as $temp) {
+		$D["elective"][$temp["classid"]] = $temp;
+		$D["elective"][$temp["classid"]]["time"] = [];
+	}
+
+	$sth = $G["db"]->prepare('SELECT * FROM `class_time` WHERE `classid` IN ( SELECT `elective`.`classid` FROM (SELECT * FROM `elective` WHERE `stuid` = :stuid ORDER BY `classid`) `elective` LEFT JOIN `class` ON `elective`.`classid` = `class`.`classid` )');
+	$sth->bindValue(":stuid", $U["account"]);
+	$sth->execute();
+	$row = $sth->fetchAll(PDO::FETCH_ASSOC);
+	foreach ($row as $temp) {
+		$D["elective"][$temp["classid"]]["time"] []= $temp;
+		for ($period=$temp["period1"]; $period <= $temp["period2"]; $period++) { 
+			$D["calendar"][$temp["day"]][$period] = $D["elective"][$temp["classid"]]["name"];
+		}
+	}
+}
+
 if (isset($_POST["select"])) {
 	if (!$U["islogin"]) {
 		?>
@@ -49,16 +73,45 @@ if (isset($_POST["select"])) {
 			</div>
 			<?php
 		} else {
-			$sth = $G["db"]->prepare("INSERT INTO `elective` (`stuid`, `classid`) VALUES (:stuid, :classid)");
-			$sth->bindValue(":stuid", $U["account"]);
+			$collision = false;
+			$sth = $G["db"]->prepare('SELECT * FROM `class_time` WHERE `classid` = :classid');
 			$sth->bindValue(":classid", $_POST["select"]);
 			$sth->execute();
-			?>
-			<div class="alert alert-success alert-dismissible" role="alert">
-				<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				已成功選修 <?=$class["classid"]?> <?=$class["name"]?>
-			</div>
-			<?php
+			$time = $sth->fetchAll(PDO::FETCH_ASSOC);
+			foreach ($time as $day) {
+				for ($period=$day["period1"]; $period <= $day["period2"]; $period++) { 
+					if (isset($D["calendar"][$day["day"]][$period])) {
+						$collision = true;
+					}
+				}
+			}
+			if ($collision) {
+				?>
+				<div class="alert alert-danger alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					該課程衝堂
+				</div>
+				<?php
+			} else {
+				$sth = $G["db"]->prepare("INSERT INTO `elective` (`stuid`, `classid`) VALUES (:stuid, :classid)");
+				$sth->bindValue(":stuid", $U["account"]);
+				$sth->bindValue(":classid", $_POST["select"]);
+				$sth->execute();
+				$D["elective"][$class["classid"]] = $class;
+				$D["elective"][$class["classid"]]["time"] = [];
+				foreach ($time as $day) {
+					$D["elective"][$class["classid"]]["time"] []= $day;
+					for ($period=$day["period1"]; $period <= $day["period2"]; $period++) { 
+						$D["calendar"][$day["day"]][$period] = $class["name"];
+					}
+				}
+				?>
+				<div class="alert alert-success alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					已成功選修 <?=$class["classid"]?> <?=$class["name"]?>
+				</div>
+				<?php
+			}
 		}
 	}
 }
@@ -96,36 +149,18 @@ if (isset($_POST["remove"])) {
 			$sth->bindValue(":stuid", $U["account"]);
 			$sth->bindValue(":classid", $_POST["remove"]);
 			$sth->execute();
+			foreach ($D["elective"][$_POST["remove"]]["time"] as $day) {
+				for ($period=$day["period1"]; $period <= $day["period2"]; $period++) { 
+					unset($D["calendar"][$day["day"]][$period]);
+				}
+			}
+			unset($D["elective"][$_POST["remove"]]);
 			?>
 			<div class="alert alert-success alert-dismissible" role="alert">
 				<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 				已成功退選 <?=$elective["classid"]?> <?=$elective["name"]?>
 			</div>
 			<?php
-		}
-	}
-}
-
-if ($U["accttype"] == "student") {
-	$sth = $G["db"]->prepare('SELECT * FROM ( SELECT * FROM `elective` WHERE `stuid` = :stuid ORDER BY `classid` ) `elective` LEFT JOIN `class` ON `elective`.`classid` = `class`.`classid`');
-	$sth->bindValue(":stuid", $U["account"]);
-	$sth->execute();
-	$row = $sth->fetchAll(PDO::FETCH_ASSOC);
-	$D["elective"] = [];
-	$D["calendar"] = [];
-	foreach ($row as $temp) {
-		$D["elective"][$temp["classid"]] = $temp;
-		$D["elective"][$temp["classid"]]["time"] = [];
-	}
-
-	$sth = $G["db"]->prepare('SELECT * FROM `class_time` WHERE `classid` IN ( SELECT `elective`.`classid` FROM (SELECT * FROM `elective` WHERE `stuid` = :stuid ORDER BY `classid`) `elective` LEFT JOIN `class` ON `elective`.`classid` = `class`.`classid` )');
-	$sth->bindValue(":stuid", $U["account"]);
-	$sth->execute();
-	$row = $sth->fetchAll(PDO::FETCH_ASSOC);
-	foreach ($row as $temp) {
-		$D["elective"][$temp["classid"]]["time"] []= $temp;
-		for ($period=$temp["period1"]; $period <= $temp["period2"]; $period++) { 
-			$D["calendar"][$temp["day"]][$period] = $D["elective"][$temp["classid"]]["name"];
 		}
 	}
 }
@@ -236,11 +271,17 @@ require("header.php");
 							<td><?=htmlentities($class["classid"])?></td>
 							<td><?=htmlentities($class["name"])?></td>
 							<td><?php
+								$collision = false;
 								foreach ($class["time"] as $time) {
 									if ($time["period1"] == $time["period2"]) {
 										printf("(%s) %s ", $C["day"][$time["day"]], $time["period1"]);
 									} else {
 										printf("(%s) %s-%s ", $C["day"][$time["day"]], $time["period1"], $time["period2"]);
+									}
+									for ($period=$time["period1"]; $period <= $time["period2"]; $period++) { 
+										if (isset($D["calendar"][$time["day"]][$period])) {
+											$collision = true;
+										}
 									}
 								}
 							?></td>
@@ -252,6 +293,8 @@ require("header.php");
 								<?php
 								if (isset($D["elective"][$class["classid"]])) {
 									echo "已選";
+								} else if ($collision) {
+									echo "衝堂";
 								} else {
 									?><button type="submit" name="select" value="<?=$class["classid"]?>" class="btn btn-success btn-sm">選課</button><?php
 								}
