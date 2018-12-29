@@ -13,6 +13,7 @@ $C["cookiename"] = 'elective';
 $C["cookieexpire"] = 86400*7;
 
 $C["accttype"] = ['student'=>'學生', 'admin'=>'管理員'];
+$C["day"] = [1=>'一', 2=>'二', 3=>'三', 4=>'四', 5=>'五', 6=>'六', 7=>'日'];
 
 $C["superadmin"] = [];
 

@@ -128,6 +128,7 @@ if ($showform) {
 				<tr>
 					<th>編號</th>
 					<th>名稱</th>
+					<th>時間</th>
 					<th>學分數</th>
 					<th>刪除</th>
 				</tr>
@@ -137,6 +138,15 @@ if ($showform) {
 					<tr>
 						<td><?=htmlentities($class["classid"])?></td>
 						<td><?=htmlentities($class["name"])?></td>
+						<td><?php
+							foreach ($class["time"] as $time) {
+								if ($time["period1"] == $time["period2"]) {
+									printf("(%s) %s ", $C["day"][$time["day"]], $time["period1"]);
+								} else {
+									printf("(%s) %s-%s ", $C["day"][$time["day"]], $time["period1"], $time["period2"]);
+								}
+							}
+						?></td>
 						<td><?=$class["credit"]?></td>
 						<td>
 							<button type="submit" name="delete" value="<?=$class["classid"]?>" class="btn btn-danger btn-sm"><i class="fa fa-trash" aria-hidden="true"></i> 刪除</button>
