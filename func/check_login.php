@@ -2,6 +2,7 @@
 
 if (!isset($_COOKIE[$C["cookiename"]])) {
 	$U["islogin"] = false;
+	$U["accttype"] = "";
 } else {
 	$sth = $G["db"]->prepare('SELECT * FROM `login_session` WHERE `cookie` = :cookie');
 	$sth->bindValue(":cookie", $_COOKIE[$C["cookiename"]]);
@@ -9,6 +10,7 @@ if (!isset($_COOKIE[$C["cookiename"]])) {
 	$cookie = $sth->fetch(PDO::FETCH_ASSOC);
 	if ($cookie === false) {
 		$U["islogin"] = false;
+		$U["accttype"] = "";
 	} else {
 		if ($cookie["type"] == 0) {
 			$sth = $G["db"]->prepare('SELECT `stuid` AS `account`, `name` FROM `student` WHERE `stuid` = :stuid');
@@ -26,6 +28,7 @@ if (!isset($_COOKIE[$C["cookiename"]])) {
 			$U["accttype"] = "admin";
 		} else {
 			$U["islogin"] = false;
+			$U["accttype"] = "";
 		}
 	}
 }
