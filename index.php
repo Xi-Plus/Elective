@@ -30,6 +30,9 @@ require("header.php");
 				學生選課
 			</a>
 		</p>
+		<?php
+		if (!$U["islogin"] || $U["accttype"] == "admin") {
+		?>
 		<p>
 			<a class="btn btn-lg btn-primary" href="<?=$C["path"]?>/managedepartment/" role="button">
 				管理科系
@@ -44,6 +47,9 @@ require("header.php");
 				管理管理員
 			</a>
 		</p>
+		<?php
+		}
+		?>
 	</div>
 </div>
 
