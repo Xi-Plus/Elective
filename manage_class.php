@@ -57,7 +57,28 @@ if (!$U["islogin"]) {
 			$sth->bindValue(":name", $_POST["name"]);
 			$sth->bindValue(":credit", $_POST["credit"]);
 			$sth->execute();
-			$D["class"][$_POST["classid"]] = array("classid"=>$_POST["classid"], "name"=>$_POST["name"], "credit"=>$_POST["credit"]);
+			$D["class"][$_POST["classid"]] = array("classid"=>$_POST["classid"], "name"=>$_POST["name"], "credit"=>$_POST["credit"], "time"=>[]);
+
+			foreach (explode(",", $_POST["time"]) as $day) {
+				$day = trim($day);
+				$day = explode("-", $day);
+				if (count($day) == 2) {
+					$sth = $G["db"]->prepare("INSERT INTO `class_time` (`classid`, `day`, `period1`, `period2`) VALUES (:classid, :day, :period, :period)");
+					$sth->bindValue(":classid", $_POST["classid"]);
+					$sth->bindValue(":day", $day[0]);
+					$sth->bindValue(":period", $day[1]);
+					$sth->execute();
+					$D["class"][$_POST["classid"]]["time"] []= ["day"=>$day[0], "period1"=>$day[1], "period2"=>$day[1]];
+				} else if (count($day) == 3) {
+					$sth = $G["db"]->prepare("INSERT INTO `class_time` (`classid`, `day`, `period1`, `period2`) VALUES (:classid, :day, :period1, :period2)");
+					$sth->bindValue(":classid", $_POST["classid"]);
+					$sth->bindValue(":day", $day[0]);
+					$sth->bindValue(":period1", $day[1]);
+					$sth->bindValue(":period2", $day[2]);
+					$sth->execute();
+					$D["class"][$_POST["classid"]]["time"] []= ["day"=>$day[0], "period1"=>$day[1], "period2"=>$day[2]];
+				}
+			}
 			?>
 			<div class="alert alert-success alert-dismissible" role="alert">
 				<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -97,6 +118,39 @@ if (!$U["islogin"]) {
 				<div class="alert alert-success alert-dismissible" role="alert">
 					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 					已修改 <?=htmlentities($_POST["classid"])?> 的學分數
+				</div>
+				<?php
+			}
+			if ($_POST["time"] !== "") {
+				$sth = $G["db"]->prepare("DELETE FROM `class_time` WHERE `classid` = :classid");
+				$sth->bindValue(":classid", $_POST["classid"]);
+				$sth->execute();
+				$D["class"][$_POST["classid"]]["time"] = [];
+
+				foreach (explode(",", $_POST["time"]) as $day) {
+					$day = trim($day);
+					$day = explode("-", $day);
+					if (count($day) == 2) {
+						$sth = $G["db"]->prepare("INSERT INTO `class_time` (`classid`, `day`, `period1`, `period2`) VALUES (:classid, :day, :period, :period)");
+						$sth->bindValue(":classid", $_POST["classid"]);
+						$sth->bindValue(":day", $day[0]);
+						$sth->bindValue(":period", $day[1]);
+						$sth->execute();
+						$D["class"][$_POST["classid"]]["time"] []= ["day"=>$day[0], "period1"=>$day[1], "period2"=>$day[1]];
+					} else if (count($day) == 3) {
+						$sth = $G["db"]->prepare("INSERT INTO `class_time` (`classid`, `day`, `period1`, `period2`) VALUES (:classid, :day, :period1, :period2)");
+						$sth->bindValue(":classid", $_POST["classid"]);
+						$sth->bindValue(":day", $day[0]);
+						$sth->bindValue(":period1", $day[1]);
+						$sth->bindValue(":period2", $day[2]);
+						$sth->execute();
+						$D["class"][$_POST["classid"]]["time"] []= ["day"=>$day[0], "period1"=>$day[1], "period2"=>$day[2]];
+					}
+				}
+				?>
+				<div class="alert alert-success alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					已修改 <?=htmlentities($_POST["classid"])?> 的時間
 				</div>
 				<?php
 			}
@@ -170,6 +224,12 @@ if ($showform) {
 			<label class="col-sm-2 form-control-label"><i class="fa fa-hashtag" aria-hidden="true"></i> 名稱</label>
 			<div class="col-sm-10">
 				<input class="form-control" type="text" name="name" placeholder="新增時必填，不修改留空">
+			</div>
+		</div>
+		<div class="row">
+			<label class="col-sm-2 form-control-label"><i class="fa fa-header" aria-hidden="true"></i> 時間</label>
+			<div class="col-sm-10">
+				<input class="form-control" type="text" name="time" placeholder="新增時必填，不修改留空，格式：日-節 or 日-節-節，用,隔開">
 			</div>
 		</div>
 		<div class="row">
