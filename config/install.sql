@@ -80,7 +80,7 @@ ALTER TABLE `student`
 
 
 ALTER TABLE `class_time`
-  ADD CONSTRAINT `class_time_ibfk_1` FOREIGN KEY (`classid`) REFERENCES `class` (`classid`);
+  ADD CONSTRAINT `class_time_ibfk_1` FOREIGN KEY (`classid`) REFERENCES `class` (`classid`) ON DELETE CASCADE;
 
 ALTER TABLE `elective`
   ADD CONSTRAINT `elective_ibfk_2` FOREIGN KEY (`classid`) REFERENCES `class` (`classid`),
