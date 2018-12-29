@@ -102,7 +102,14 @@ if (!$U["islogin"]) {
 		}
 	}
 } else if (isset($_POST["delete"])) {
-	if (isset($D["admin"][$_POST["delete"]])) {
+	if (!isset($D["admin"][$_POST["delete"]])) {
+		?>
+		<div class="alert alert-danger alert-dismissible" role="alert">
+			<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			管理員 <?=$_POST["delete"]?> 不存在
+		</div>
+		<?php
+	} else {
 		$sth = $G["db"]->prepare("DELETE FROM `admin` WHERE `account` = :account");
 		$sth->bindValue(":account", $_POST["delete"]);
 		$sth->execute();
