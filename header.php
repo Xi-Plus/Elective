@@ -9,10 +9,9 @@
 				<a class="nav-link" href="<?=$C["path"]?>/"><i class="fa fa-home" aria-hidden="true"></i> 首頁</a>
 			</li>
 			<li class="nav-item dropdown">
-				<a class="nav-link dropdown-toggle" href="#" id="search" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true"><i class="fa fa-search" aria-hidden="true"></i> 查詢</a>
+				<a class="nav-link dropdown-toggle" href="#" id="search" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">學生</a>
 				<div class="dropdown-menu" aria-labelledby="search">
-					<a class="dropdown-item" href="<?=$C["path"]?>/plans/"><i class="fa fa-sticky-note-o" aria-hidden="true"></i> 教案</a>
-					<a class="dropdown-item" href="<?=$C["path"]?>/files/"><i class="fa fa-file" aria-hidden="true"></i> 檔案</a>
+					<a class="dropdown-item" href="<?=$C["path"]?>/elective/">選課</a>
 				</div>
 			</li>
 			<?php
@@ -21,8 +20,9 @@
 			<li class="nav-item dropdown">
 				<a class="nav-link dropdown-toggle" href="#" id="manage" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true"><i class="fa fa-pencil" aria-hidden="true"></i> 管理</a>
 				<div class="dropdown-menu" aria-labelledby="manage">
-					<a class="dropdown-item" href="<?=$C["path"]?>/manageplans/"><i class="fa fa-sticky-note-o" aria-hidden="true"></i> 教案</a>
-					<a class="dropdown-item" href="<?=$C["path"]?>/managefiles/"><i class="fa fa-file" aria-hidden="true"></i> 檔案</a>
+					<a class="dropdown-item" href="<?=$C["path"]?>/managedepartment/">科系</a>
+					<a class="dropdown-item" href="<?=$C["path"]?>/manageclass/">課程</a>
+					<a class="dropdown-item" href="<?=$C["path"]?>/managestudent/"><i class="fa fa-user" aria-hidden="true"></i> 學生</a>
 					<a class="dropdown-item" href="<?=$C["path"]?>/manageadmin/"><i class="fa fa-user" aria-hidden="true"></i> 管理員</a>
 				</div>
 			</li>
