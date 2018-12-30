@@ -180,7 +180,7 @@ require("header.php");
 						<?php
 						for ($day=1; $day <= 7; $day++) { 
 							?>
-							<option value="<?=$day?>" <?=($_POST["day"]??""==$day?"selected":"")?> >星期<?=$C["day"][$day]?></option>
+							<option value="<?=$day?>" <?=(($_POST["day"]??"")==$day?"selected":"")?> >星期<?=$C["day"][$day]?></option>
 							<?php
 						}
 						?>
@@ -193,9 +193,9 @@ require("header.php");
 					<select class="form-control" name="period">
 						<option value="">所有節次</option>
 						<?php
-						for ($period=1; $period <= 13; $period++) { 
+						for ($period=1; $period <= 13; $period++) {
 							?>
-							<option value="<?=$period?>" <?=($_POST["period"]??""==$period?"selected":"")?>>第<?=$period?>節</option>
+							<option value="<?=$period?>" <?=(($_POST["period"]??"")==$period?"selected":"")?>>第<?=$period?>節</option>
 							<?php
 						}
 						?>
@@ -218,8 +218,12 @@ require("header.php");
 				}
 				$query .= "ORDER BY `classid` ";
 				$sth = $G["db"]->prepare($query);
-				$sth->bindValue(":day", $_POST["day"]);
-				$sth->bindValue(":period", $_POST["period"]);
+				if ($_POST["day"] != "" && is_numeric($_POST["day"])) {
+					$sth->bindValue(":day", $_POST["day"]);
+				}
+				if ($_POST["period"] != "" && is_numeric($_POST["period"])) {
+					$sth->bindValue(":period", $_POST["period"]);
+				}
 				$sth->execute();
 				$row = $sth->fetchAll(PDO::FETCH_ASSOC);
 
@@ -240,8 +244,12 @@ require("header.php");
 				}
 				$query .= ") ORDER BY `classid` ";
 				$sth = $G["db"]->prepare($query);
-				$sth->bindValue(":day", $_POST["day"]);
-				$sth->bindValue(":period", $_POST["period"]);
+				if ($_POST["day"] != "" && is_numeric($_POST["day"])) {
+					$sth->bindValue(":day", $_POST["day"]);
+				}
+				if ($_POST["period"] != "" && is_numeric($_POST["period"])) {
+					$sth->bindValue(":period", $_POST["period"]);
+				}
 				$sth->execute();
 				$row = $sth->fetchAll(PDO::FETCH_ASSOC);
 				foreach ($row as $temp) {
