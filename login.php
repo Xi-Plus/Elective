@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <?php
-require('config/config.php');
+require(__DIR__.'/config/config.php');
+require(__DIR__.'/func/Login.php');
 ?>
 <html lang="zh-Hant-TW">
 <head>
@@ -29,70 +30,47 @@ if ($_GET["action"] === "login") {
 		<?php
 		$showform = false;
 	} else if (isset($_POST["account"])) {
-		if (in_array($_POST["type"], ["student", "admin"])) {
-			if ($_POST["type"] == "student") {
-				$sth = $G["db"]->prepare('SELECT `stuid` AS `account`, `password`, `name` FROM `student` WHERE `stuid` = :stuid');
-				$sth->bindValue(":stuid", $_POST["account"]);
-			} else if ($_POST["type"] == "admin") {
-				$sth = $G["db"]->prepare('SELECT `account`, `password`, `name` FROM `admin` WHERE `account` = :account');
-				$sth->bindValue(":account", $_POST["account"]);
-			}
-			$sth->execute();
-			$account = $sth->fetch(PDO::FETCH_ASSOC);
-			if ($account !== false && password_verify($_POST["password"], $account["password"])) {
-				$cookie = md5(uniqid(rand(),true));
-				$sth = $G["db"]->prepare('INSERT INTO `login_session` (`type`, `account`, `cookie`) VALUES (:type, :account, :cookie)');
-				if ($_POST["type"] == "student") {
-					$sth->bindValue(":type", 0);
-				} else if ($_POST["type"] == "admin") {
-					$sth->bindValue(":type", 1);
-				}
-				$sth->bindValue(":account", $account["account"]);
-				$sth->bindValue(":cookie", $cookie);
-				$sth->execute();
-				setcookie($C["cookiename"], $cookie, time()+$C["cookieexpire"], $C["path"]);
+		switch (Login($_POST["type"], $_POST["account"], $_POST["password"])) {
+			case 'success':
+				$showform = false;
 				?>
 				<div class="alert alert-success alert-dismissible" role="alert">
 					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 					登入成功
 				</div>
 				<?php
-				$U = $account;
-				$U["islogin"] = true;
-				$U["accttype"] = $_POST["type"];
-				$showform = false;
-			} else {
+				break;
+			
+			case 'failed':
 				?>
 				<div class="alert alert-danger alert-dismissible" role="alert">
 					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 					登入失敗
 				</div>
 				<?php
-			}
-		} else {
-			?>
-			<div class="alert alert-danger alert-dismissible" role="alert">
-				<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				錯誤的帳號類型
-			</div>
-			<?php
+				break;
+			
+			case 'wrong_type':
+				$showform = false;
+				?>
+				<div class="alert alert-danger alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					錯誤的帳號類型
+				</div>
+				<?php
+				break;
+			
 		}
 	}
 } else if ($_GET["action"] === "logout") {
-	if ($U["islogin"]) {
-		$sth = $G["db"]->prepare('DELETE FROM `login_session` WHERE `cookie` = :cookie');
-		$sth->bindValue(":cookie", $_COOKIE[$C["cookiename"]]);
-		$sth->execute();
-		setcookie($C["cookiename"], "", time(), $C["path"]);
-	}
+	Logout();
+	$showform = false;
 	?>
 	<div class="alert alert-success alert-dismissible" role="alert">
 		<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 		已登出
 	</div>
 	<?php
-	$U["islogin"] = false;
-	$showform = false;
 }
 require("header.php");
 if ($showform) {
