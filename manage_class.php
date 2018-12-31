@@ -2,6 +2,7 @@
 <?php
 require(__DIR__."/config/config.php");
 require(__DIR__."/func/class_list.php");
+require(__DIR__."/func/Class.php");
 ?>
 <html lang="zh-Hant-TW">
 <head>
@@ -44,11 +45,30 @@ if (!$U["islogin"]) {
 				已有課程 <?=htmlentities($_POST["classid"])?>
 			</div>
 			<?php
-		} else if ($_POST["name"] === "" || $_POST["credit"] === "") {
+		} else if ($_POST["name"] === "" || $_POST["time"] === "" || $_POST["credit"] === "") {
 			?>
 			<div class="alert alert-danger alert-dismissible" role="alert">
 				<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 				名稱及學分數不可為空
+			</div>
+			<?php
+		} else if (($timeValid = checkTimeValid($_POST["time"])) != "ok") {
+			$msg = "";
+			switch ($timeValid) {
+				case 'wrong_format':
+					$msg = "時間格式錯誤";
+					break;
+				case 'bad_day':
+					$msg = "時間的星期必須是1~7";
+					break;
+				case 'bad_period':
+					$msg = "時間的節數必須是1~13";
+					break;
+			}
+			?>
+			<div class="alert alert-danger alert-dismissible" role="alert">
+				<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<?=$msg?>
 			</div>
 			<?php
 		} else {
@@ -122,37 +142,58 @@ if (!$U["islogin"]) {
 				<?php
 			}
 			if ($_POST["time"] !== "") {
-				$sth = $G["db"]->prepare("DELETE FROM `class_time` WHERE `classid` = :classid");
-				$sth->bindValue(":classid", $_POST["classid"]);
-				$sth->execute();
-				$D["class"][$_POST["classid"]]["time"] = [];
-
-				foreach (explode(",", $_POST["time"]) as $day) {
-					$day = trim($day);
-					$day = explode("-", $day);
-					if (count($day) == 2) {
-						$sth = $G["db"]->prepare("INSERT INTO `class_time` (`classid`, `day`, `period1`, `period2`) VALUES (:classid, :day, :period, :period)");
-						$sth->bindValue(":classid", $_POST["classid"]);
-						$sth->bindValue(":day", $day[0]);
-						$sth->bindValue(":period", $day[1]);
-						$sth->execute();
-						$D["class"][$_POST["classid"]]["time"] []= ["day"=>$day[0], "period1"=>$day[1], "period2"=>$day[1]];
-					} else if (count($day) == 3) {
-						$sth = $G["db"]->prepare("INSERT INTO `class_time` (`classid`, `day`, `period1`, `period2`) VALUES (:classid, :day, :period1, :period2)");
-						$sth->bindValue(":classid", $_POST["classid"]);
-						$sth->bindValue(":day", $day[0]);
-						$sth->bindValue(":period1", $day[1]);
-						$sth->bindValue(":period2", $day[2]);
-						$sth->execute();
-						$D["class"][$_POST["classid"]]["time"] []= ["day"=>$day[0], "period1"=>$day[1], "period2"=>$day[2]];
+				 if (($timeValid = checkTimeValid($_POST["time"])) != "ok") {
+					$msg = "";
+					switch ($timeValid) {
+						case 'wrong_format':
+							$msg = "時間格式錯誤";
+							break;
+						case 'bad_day':
+							$msg = "時間的星期必須是1~7";
+							break;
+						case 'bad_period':
+							$msg = "時間的節數必須是1~13";
+							break;
 					}
+					?>
+					<div class="alert alert-danger alert-dismissible" role="alert">
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<?=$msg?>
+					</div>
+					<?php
+				} else {
+					$sth = $G["db"]->prepare("DELETE FROM `class_time` WHERE `classid` = :classid");
+					$sth->bindValue(":classid", $_POST["classid"]);
+					$sth->execute();
+					$D["class"][$_POST["classid"]]["time"] = [];
+	
+					foreach (explode(",", $_POST["time"]) as $day) {
+						$day = trim($day);
+						$day = explode("-", $day);
+						if (count($day) == 2) {
+							$sth = $G["db"]->prepare("INSERT INTO `class_time` (`classid`, `day`, `period1`, `period2`) VALUES (:classid, :day, :period, :period)");
+							$sth->bindValue(":classid", $_POST["classid"]);
+							$sth->bindValue(":day", $day[0]);
+							$sth->bindValue(":period", $day[1]);
+							$sth->execute();
+							$D["class"][$_POST["classid"]]["time"] []= ["day"=>$day[0], "period1"=>$day[1], "period2"=>$day[1]];
+						} else if (count($day) == 3) {
+							$sth = $G["db"]->prepare("INSERT INTO `class_time` (`classid`, `day`, `period1`, `period2`) VALUES (:classid, :day, :period1, :period2)");
+							$sth->bindValue(":classid", $_POST["classid"]);
+							$sth->bindValue(":day", $day[0]);
+							$sth->bindValue(":period1", $day[1]);
+							$sth->bindValue(":period2", $day[2]);
+							$sth->execute();
+							$D["class"][$_POST["classid"]]["time"] []= ["day"=>$day[0], "period1"=>$day[1], "period2"=>$day[2]];
+						}
+					}
+					?>
+					<div class="alert alert-success alert-dismissible" role="alert">
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						已修改 <?=htmlentities($_POST["classid"])?> 的時間
+					</div>
+					<?php
 				}
-				?>
-				<div class="alert alert-success alert-dismissible" role="alert">
-					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					已修改 <?=htmlentities($_POST["classid"])?> 的時間
-				</div>
-				<?php
 			}
 		}
 	}
