@@ -37,6 +37,8 @@ function Login($type="", $account="", $password="") {
 		} else {
 			return "wrong_type";
 		}
+	} else {
+		return "failed";
 	}
 }
 
