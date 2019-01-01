@@ -46,6 +46,48 @@ if (isset($_REQUEST["action"])) {
 				"result"=> getSearchResult($_REQUEST["day"], $_REQUEST["period"])
 			];
 			break;
+		
+		case 'getelective':
+			if (!$U["islogin"]) {
+				$res = [
+					"result"=> "not_login"
+				];
+				break;
+			}
+			if ($U["accttype"] != "student") {
+				$res = [
+					"result"=> "no_permission"
+				];
+				break;
+			}
+
+			require(__DIR__.'/func/Elective.php');
+			$res = [
+				"result"=> "ok",
+				"data"=> getElective()
+			];
+			break;
+
+		case 'getcalendar':
+			if (!$U["islogin"]) {
+				$res = [
+					"result"=> "not_login"
+				];
+				break;
+			}
+			if ($U["accttype"] != "student") {
+				$res = [
+					"result"=> "no_permission"
+				];
+				break;
+			}
+
+			require(__DIR__.'/func/Elective.php');
+			$res = [
+				"result"=> "ok",
+				"data"=> getCalendar()
+			];
+			break;
 	}
 }
 

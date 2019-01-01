@@ -23,27 +23,8 @@ body {
 <body>
 <?php
 if ($U["accttype"] == "student") {
-	$sth = $G["db"]->prepare('SELECT * FROM ( SELECT * FROM `elective` WHERE `stuid` = :stuid ORDER BY `classid` ) `elective` LEFT JOIN `class` ON `elective`.`classid` = `class`.`classid`');
-	$sth->bindValue(":stuid", $U["account"]);
-	$sth->execute();
-	$row = $sth->fetchAll(PDO::FETCH_ASSOC);
-	$D["elective"] = [];
-	$D["calendar"] = [];
-	foreach ($row as $temp) {
-		$D["elective"][$temp["classid"]] = $temp;
-		$D["elective"][$temp["classid"]]["time"] = [];
-	}
-
-	$sth = $G["db"]->prepare('SELECT * FROM `class_time` WHERE `classid` IN ( SELECT `elective`.`classid` FROM (SELECT * FROM `elective` WHERE `stuid` = :stuid ORDER BY `classid`) `elective` LEFT JOIN `class` ON `elective`.`classid` = `class`.`classid` )');
-	$sth->bindValue(":stuid", $U["account"]);
-	$sth->execute();
-	$row = $sth->fetchAll(PDO::FETCH_ASSOC);
-	foreach ($row as $temp) {
-		$D["elective"][$temp["classid"]]["time"] []= $temp;
-		for ($period=$temp["period1"]; $period <= $temp["period2"]; $period++) { 
-			$D["calendar"][$temp["day"]][$period] = $D["elective"][$temp["classid"]]["name"];
-		}
-	}
+	$D["elective"] = getElective();
+	$D["calendar"] = getCalendar();
 }
 
 if (isset($_POST["select"])) {
@@ -100,10 +81,16 @@ if (isset($_POST["select"])) {
 				$sth->execute();
 				$D["elective"][$class["classid"]] = $class;
 				$D["elective"][$class["classid"]]["time"] = [];
+				$D["elective"][$class["classid"]]["timestr"] = "";
 				foreach ($time as $day) {
 					$D["elective"][$class["classid"]]["time"] []= $day;
 					for ($period=$day["period1"]; $period <= $day["period2"]; $period++) { 
 						$D["calendar"][$day["day"]][$period] = $class["name"];
+					}
+					if ($day["period1"] == $day["period2"]) {
+						$D["elective"][$class["classid"]]["timestr"] .= sprintf("(%s) %s ", $C["day"][$day["day"]], $day["period1"]);
+					} else {
+						$D["elective"][$class["classid"]]["timestr"] .= sprintf("(%s) %s-%s ", $C["day"][$day["day"]], $day["period1"], $day["period2"]);
 					}
 				}
 				?>
@@ -230,25 +217,19 @@ require("header.php");
 					<tbody id="plantable">
 					<?php
 					foreach ($D["class"] as $class) {
+						$collision = false;
+						foreach ($class["time"] as $time) {
+							for ($period=$time["period1"]; $period <= $time["period2"]; $period++) { 
+								if (isset($D["calendar"][$time["day"]][$period])) {
+									$collision = true;
+								}
+							}
+						}
 						?>
 						<tr>
 							<td><?=htmlentities($class["classid"])?></td>
 							<td><?=htmlentities($class["name"])?></td>
-							<td><?php
-								$collision = false;
-								foreach ($class["time"] as $time) {
-									if ($time["period1"] == $time["period2"]) {
-										printf("(%s) %s ", $C["day"][$time["day"]], $time["period1"]);
-									} else {
-										printf("(%s) %s-%s ", $C["day"][$time["day"]], $time["period1"], $time["period2"]);
-									}
-									for ($period=$time["period1"]; $period <= $time["period2"]; $period++) { 
-										if (isset($D["calendar"][$time["day"]][$period])) {
-											$collision = true;
-										}
-									}
-								}
-							?></td>
+							<td><?=htmlentities($class["timestr"])?></td>
 							<td><?=$class["credit"]?></td>
 							<?php
 							if ($U["accttype"] == "student") {
@@ -295,15 +276,7 @@ require("header.php");
 							<tr>
 								<td><?=htmlentities($class["classid"])?></td>
 								<td><?=htmlentities($class["name"])?></td>
-								<td><?php
-									foreach ($class["time"] as $time) {
-										if ($time["period1"] == $time["period2"]) {
-											printf("(%s) %s ", $C["day"][$time["day"]], $time["period1"]);
-										} else {
-											printf("(%s) %s-%s ", $C["day"][$time["day"]], $time["period1"], $time["period2"]);
-										}
-									}
-								?></td>
+								<td><?=htmlentities($class["timestr"])?></td>
 								<td><?=$class["credit"]?></td>
 								<td>
 									<button type="submit" name="remove" value="<?=$class["classid"]?>" class="btn btn-danger btn-sm">退選</button>
