@@ -43,63 +43,36 @@ if (isset($_POST["select"])) {
 		</div>
 		<?php
 	} else {
-		$sth = $G["db"]->prepare('SELECT * FROM `class` WHERE `classid` = :classid');
-		$sth->bindValue(":classid", $_POST["select"]);
-		$sth->execute();
-		$class = $sth->fetch(PDO::FETCH_ASSOC);
-		if ($class === false) {
-			?>
-			<div class="alert alert-danger alert-dismissible" role="alert">
-				<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				查無該堂課
-			</div>
-			<?php
-		} else {
-			$collision = false;
-			$sth = $G["db"]->prepare('SELECT * FROM `class_time` WHERE `classid` = :classid');
-			$sth->bindValue(":classid", $_POST["select"]);
-			$sth->execute();
-			$time = $sth->fetchAll(PDO::FETCH_ASSOC);
-			foreach ($time as $day) {
-				for ($period=$day["period1"]; $period <= $day["period2"]; $period++) { 
-					if (isset($D["calendar"][$day["day"]][$period])) {
-						$collision = true;
-					}
-				}
-			}
-			if ($collision) {
+		$result = Elective($_POST["select"]);
+		switch ($result["result"]) {
+			case 'not_found':
+				?>
+				<div class="alert alert-danger alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					查無該堂課
+				</div>
+				<?php
+				break;
+			
+			case 'collision':
 				?>
 				<div class="alert alert-danger alert-dismissible" role="alert">
 					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 					該課程衝堂
 				</div>
 				<?php
-			} else {
-				$sth = $G["db"]->prepare("INSERT INTO `elective` (`stuid`, `classid`) VALUES (:stuid, :classid)");
-				$sth->bindValue(":stuid", $U["account"]);
-				$sth->bindValue(":classid", $_POST["select"]);
-				$sth->execute();
-				$D["elective"][$class["classid"]] = $class;
-				$D["elective"][$class["classid"]]["time"] = [];
-				$D["elective"][$class["classid"]]["timestr"] = "";
-				foreach ($time as $day) {
-					$D["elective"][$class["classid"]]["time"] []= $day;
-					for ($period=$day["period1"]; $period <= $day["period2"]; $period++) { 
-						$D["calendar"][$day["day"]][$period] = $class["name"];
-					}
-					if ($day["period1"] == $day["period2"]) {
-						$D["elective"][$class["classid"]]["timestr"] .= sprintf("(%s) %s ", $C["day"][$day["day"]], $day["period1"]);
-					} else {
-						$D["elective"][$class["classid"]]["timestr"] .= sprintf("(%s) %s-%s ", $C["day"][$day["day"]], $day["period1"], $day["period2"]);
-					}
-				}
+				break;
+			
+			case 'success':
 				?>
 				<div class="alert alert-success alert-dismissible" role="alert">
 					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					已成功選修 <?=$class["classid"]?> <?=$class["name"]?>
+					已成功選修 <?=$result["class"]["classid"]?> <?=$result["class"]["name"]?>
 				</div>
 				<?php
-			}
+				$D["elective"] = getElective();
+				$D["calendar"] = getCalendar();
+				break;
 		}
 	}
 }
@@ -120,35 +93,27 @@ if (isset($_POST["remove"])) {
 		</div>
 		<?php
 	} else {
-		$sth = $G["db"]->prepare('SELECT * FROM ( SELECT * FROM `elective` WHERE `stuid` = :stuid AND `classid` = :classid ) `elective` LEFT JOIN `class` ON `elective`.`classid` = `class`.`classid`');
-		$sth->bindValue(":stuid", $U["account"]);
-		$sth->bindValue(":classid", $_POST["remove"]);
-		$sth->execute();
-		$elective = $sth->fetch(PDO::FETCH_ASSOC);
-		if ($elective === false) {
-			?>
-			<div class="alert alert-danger alert-dismissible" role="alert">
-				<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				查無該選修
-			</div>
-			<?php
-		} else {
-			$sth = $G["db"]->prepare("DELETE FROM `elective` WHERE `stuid` = :stuid AND `classid` = :classid");
-			$sth->bindValue(":stuid", $U["account"]);
-			$sth->bindValue(":classid", $_POST["remove"]);
-			$sth->execute();
-			foreach ($D["elective"][$_POST["remove"]]["time"] as $day) {
-				for ($period=$day["period1"]; $period <= $day["period2"]; $period++) { 
-					unset($D["calendar"][$day["day"]][$period]);
-				}
-			}
-			unset($D["elective"][$_POST["remove"]]);
-			?>
-			<div class="alert alert-success alert-dismissible" role="alert">
-				<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				已成功退選 <?=$elective["classid"]?> <?=$elective["name"]?>
-			</div>
-			<?php
+		$result = Unelective($_POST["remove"]);
+		switch ($result["result"]) {
+			case 'not_found':
+				?>
+				<div class="alert alert-danger alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					查無該選修
+				</div>
+				<?php
+				break;
+
+			case 'success':
+				?>
+				<div class="alert alert-success alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					已成功退選 <?=$result["elective"]["classid"]?> <?=$result["elective"]["name"]?>
+				</div>
+				<?php
+				$D["elective"] = getElective();
+				$D["calendar"] = getCalendar();
+				break;
 		}
 	}
 }

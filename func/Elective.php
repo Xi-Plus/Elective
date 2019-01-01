@@ -1,7 +1,12 @@
 <?php
 
 function getSearchResult($day="", $period="") {
-	global $C, $G;
+	global $C, $G, $U;
+
+	if ($U["accttype"] == "student") {
+		$elective = getElective();
+		$calendar = getCalendar();
+	}
 
 	$query = 'SELECT * FROM `class_time` WHERE 1 ';
 	if ($day != "" && is_numeric($day)) {
@@ -49,12 +54,25 @@ function getSearchResult($day="", $period="") {
 	foreach ($row as $temp) {
 		$result[$temp["classid"]] += $temp;
 		$result[$temp["classid"]]["timestr"] = "";
+		if ($U["accttype"] == "student") {
+			$result[$temp["classid"]]["elective"] = "ok";
+		}
 		foreach ($result[$temp["classid"]]["time"] as $time) {
 			if ($time["period1"] == $time["period2"]) {
 				$result[$temp["classid"]]["timestr"] .= sprintf("(%s) %s ", $C["day"][$time["day"]], $time["period1"]);
 			} else {
 				$result[$temp["classid"]]["timestr"] .= sprintf("(%s) %s-%s ", $C["day"][$time["day"]], $time["period1"], $time["period2"]);
 			}
+			if ($U["accttype"] == "student") {
+				for ($period=$time["period1"]; $period <= $time["period2"]; $period++) { 
+					if (isset($calendar[$time["day"]][$period])) {
+						$result[$temp["classid"]]["elective"] = "collision";
+					}
+				}
+			}
+		}
+		if ($U["accttype"] == "student" && isset($elective[$temp["classid"]])) {
+			$result[$temp["classid"]]["elective"] = "selected";
 		}
 	}
 
@@ -81,7 +99,7 @@ function getElective() {
 	foreach ($row as $temp) {
 		$result[$temp["classid"]]["time"] []= $temp;
 	}
-	
+
 	foreach ($result as $classid => $temp) {
 		$result[$temp["classid"]]["timestr"] = "";
 		foreach ($result[$temp["classid"]]["time"] as $time) {
@@ -97,7 +115,7 @@ function getElective() {
 }
 
 function getCalendar() {
-	global $C, $G, $U, $D;
+	global $C, $G, $U;
 
 	$elective = getElective();
 
@@ -115,3 +133,58 @@ function getCalendar() {
 	return $result;
 }
 
+function Elective($classid) {
+	global $C, $G, $U;
+
+	$elective = getElective();
+	$calendar = getCalendar();
+
+	$sth = $G["db"]->prepare('SELECT * FROM `class` WHERE `classid` = :classid');
+	$sth->bindValue(":classid", $classid);
+	$sth->execute();
+	$class = $sth->fetch(PDO::FETCH_ASSOC);
+	if ($class === false) {
+		return ["result" => "not_found"];
+	} else {
+		$collision = false;
+		$sth = $G["db"]->prepare('SELECT * FROM `class_time` WHERE `classid` = :classid');
+		$sth->bindValue(":classid", $classid);
+		$sth->execute();
+		$time = $sth->fetchAll(PDO::FETCH_ASSOC);
+		foreach ($time as $day) {
+			for ($period=$day["period1"]; $period <= $day["period2"]; $period++) { 
+				if (isset($calendar[$day["day"]][$period])) {
+					return ["result" => "collision"];
+				}
+			}
+		}
+
+		$sth = $G["db"]->prepare("INSERT INTO `elective` (`stuid`, `classid`) VALUES (:stuid, :classid)");
+		$sth->bindValue(":stuid", $U["account"]);
+		$sth->bindValue(":classid", $classid);
+		$sth->execute();
+
+		return ["result" => "success", "class"=> $class];
+	}
+}
+
+function Unelective($classid) {
+	global $C, $G, $U;
+
+	$elective = getElective();
+
+	$sth = $G["db"]->prepare('SELECT * FROM ( SELECT * FROM `elective` WHERE `stuid` = :stuid AND `classid` = :classid ) `elective` LEFT JOIN `class` ON `elective`.`classid` = `class`.`classid`');
+	$sth->bindValue(":stuid", $U["account"]);
+	$sth->bindValue(":classid", $classid);
+	$sth->execute();
+	$elective = $sth->fetch(PDO::FETCH_ASSOC);
+	if ($elective === false) {
+		return ["result" => "not_found"];
+	} else {
+		$sth = $G["db"]->prepare("DELETE FROM `elective` WHERE `stuid` = :stuid AND `classid` = :classid");
+		$sth->bindValue(":stuid", $U["account"]);
+		$sth->bindValue(":classid", $classid);
+		$sth->execute();
+		return ["result"=> "success", "elective"=> $elective];
+	}
+}

@@ -20,7 +20,6 @@ $res = [
 	"result"=> "failed"
 ];
 if (isset($_REQUEST["action"])) {
-	logging("action:".json_encode($_REQUEST["action"]));
 	switch ($_REQUEST["action"]) {
 		case 'checklogin':
 			$res = $U;
@@ -87,6 +86,42 @@ if (isset($_REQUEST["action"])) {
 				"result"=> "ok",
 				"data"=> getCalendar()
 			];
+			break;
+
+		case 'elective':
+			if (!$U["islogin"]) {
+				$res = [
+					"result"=> "not_login"
+				];
+				break;
+			}
+			if ($U["accttype"] != "student") {
+				$res = [
+					"result"=> "no_permission"
+				];
+				break;
+			}
+
+			require(__DIR__.'/func/Elective.php');
+			$res = Elective($_REQUEST["classid"]);
+			break;
+
+		case 'unelective':
+			if (!$U["islogin"]) {
+				$res = [
+					"result"=> "not_login"
+				];
+				break;
+			}
+			if ($U["accttype"] != "student") {
+				$res = [
+					"result"=> "no_permission"
+				];
+				break;
+			}
+
+			require(__DIR__.'/func/Elective.php');
+			$res = Unelective($_REQUEST["classid"]);
 			break;
 	}
 }
