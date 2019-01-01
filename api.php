@@ -23,9 +23,7 @@ if (isset($_REQUEST["action"])) {
 	logging("action:".json_encode($_REQUEST["action"]));
 	switch ($_REQUEST["action"]) {
 		case 'checklogin':
-			$res = [
-				"result"=> $U["islogin"]
-			];
+			$res = $U;
 			break;
 
 		case 'login':
