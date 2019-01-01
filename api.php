@@ -41,6 +41,13 @@ if (isset($_REQUEST["action"])) {
 				"result"=> Logout()
 			];
 			break;
+		
+		case 'search':
+			require(__DIR__.'/func/Elective.php');
+			$res = [
+				"result"=> getSearchResult($_REQUEST["day"], $_REQUEST["period"])
+			];
+			break;
 	}
 }
 

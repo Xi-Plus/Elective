@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <?php
 require(__DIR__.'/config/config.php');
+require(__DIR__.'/func/Elective.php');
 ?>
 <html lang="zh-Hant-TW">
 <head>
@@ -209,52 +210,7 @@ require("header.php");
 			</div>
 			<?php
 			if (isset($_POST["day"])) {
-				$query = 'SELECT * FROM `class_time` WHERE 1 ';
-				if ($_POST["day"] != "" && is_numeric($_POST["day"])) {
-					$query .= "AND `day` = :day ";
-				}
-				if ($_POST["period"] != "" && is_numeric($_POST["period"])) {
-					$query .= "AND `period1` <= :period AND :period <= `period2` ";
-				}
-				$query .= "ORDER BY `classid` ";
-				$sth = $G["db"]->prepare($query);
-				if ($_POST["day"] != "" && is_numeric($_POST["day"])) {
-					$sth->bindValue(":day", $_POST["day"]);
-				}
-				if ($_POST["period"] != "" && is_numeric($_POST["period"])) {
-					$sth->bindValue(":period", $_POST["period"]);
-				}
-				$sth->execute();
-				$row = $sth->fetchAll(PDO::FETCH_ASSOC);
-
-				$D["class"] = [];
-				foreach ($row as $temp) {
-					if (!isset($D["class"][$temp["classid"]])) {
-						$D["class"][$temp["classid"]] = ["time"=>[]];
-					}
-					$D["class"][$temp["classid"]]["time"] []= $temp;
-				}
-
-				$query = 'SELECT * FROM `class` WHERE `classid` IN ( SELECT `classid` FROM `class_time` WHERE 1 ';
-				if ($_POST["day"] != "" && is_numeric($_POST["day"])) {
-					$query .= "AND `day` = :day ";
-				}
-				if ($_POST["period"] != "" && is_numeric($_POST["period"])) {
-					$query .= "AND `period1` <= :period AND :period <= `period2` ";
-				}
-				$query .= ") ORDER BY `classid` ";
-				$sth = $G["db"]->prepare($query);
-				if ($_POST["day"] != "" && is_numeric($_POST["day"])) {
-					$sth->bindValue(":day", $_POST["day"]);
-				}
-				if ($_POST["period"] != "" && is_numeric($_POST["period"])) {
-					$sth->bindValue(":period", $_POST["period"]);
-				}
-				$sth->execute();
-				$row = $sth->fetchAll(PDO::FETCH_ASSOC);
-				foreach ($row as $temp) {
-					$D["class"][$temp["classid"]] += $temp;
-				}
+				$D["class"] = getSearchResult($_POST["day"], $_POST["period"]);
 			?>
 			<div class="table-responsive">
 				<table class="table">
