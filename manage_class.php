@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <?php
 require(__DIR__."/config/config.php");
-require(__DIR__."/func/class_list.php");
 require(__DIR__."/func/Class.php");
+require(__DIR__."/func/Elective.php");
 ?>
 <html lang="zh-Hant-TW">
 <head>
@@ -20,6 +20,7 @@ body {
 <body>
 <?php
 $showform = true;
+$D["class"] = getSearchResult();
 if (!$U["islogin"]) {
 	?>
 	<div class="alert alert-danger alert-dismissible" role="alert">
