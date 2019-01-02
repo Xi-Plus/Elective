@@ -42,7 +42,7 @@ if (isset($_REQUEST["action"])) {
 		case 'search':
 			require(__DIR__.'/func/Elective.php');
 			$res = [
-				"result"=> getSearchResult($_REQUEST["day"], $_REQUEST["period"])
+				"result"=> (object)getSearchResult($_REQUEST["day"], $_REQUEST["period"])
 			];
 			break;
 		
@@ -63,7 +63,7 @@ if (isset($_REQUEST["action"])) {
 			require(__DIR__.'/func/Elective.php');
 			$res = [
 				"result"=> "ok",
-				"data"=> getElective()
+				"data"=> (object)getElective()
 			];
 			break;
 
@@ -84,7 +84,7 @@ if (isset($_REQUEST["action"])) {
 			require(__DIR__.'/func/Elective.php');
 			$res = [
 				"result"=> "ok",
-				"data"=> getCalendar()
+				"data"=> (object)getCalendar()
 			];
 			break;
 
