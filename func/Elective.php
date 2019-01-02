@@ -8,14 +8,14 @@ function getSearchResult($day="", $period="") {
 		$calendar = getCalendar();
 	}
 
-	$query = 'SELECT * FROM `class_time` WHERE 1 ';
+	$query = 'SELECT * FROM `class_time` WHERE `classid` IN ( SELECT `classid` FROM `class_time` WHERE 1 ';
 	if ($day != "" && is_numeric($day)) {
 		$query .= "AND `day` = :day ";
 	}
 	if ($period != "" && is_numeric($period)) {
 		$query .= "AND `period1` <= :period AND :period <= `period2` ";
 	}
-	$query .= "ORDER BY `classid` ";
+	$query .= ") ORDER BY `classid` ASC, `day` ASC, `period1` ASC ";
 	$sth = $G["db"]->prepare($query);
 	if ($day != "" && is_numeric($day)) {
 		$sth->bindValue(":day", $day);
