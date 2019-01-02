@@ -108,14 +108,27 @@ if (!$U["islogin"]) {
 	if (isset($D["student"][$_POST["delete"]])) {
 		$sth = $G["db"]->prepare("DELETE FROM `student` WHERE `stuid` = :stuid");
 		$sth->bindValue(":stuid", $_POST["delete"]);
-		$sth->execute();
-		?>
-		<div class="alert alert-success alert-dismissible" role="alert">
-			<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-			已刪除學生 <?=htmlentities($D["student"][$_POST["delete"]]["name"])?>
-		</div>
-		<?php
-		unset($D["student"][$_POST["delete"]]);
+		$res = $sth->execute();
+		if ($res === false) {
+			?>
+			<div class="alert alert-danger alert-dismissible" role="alert">
+				<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				刪除學生 <?=htmlentities($D["student"][$_POST["delete"]]["name"])?> 失敗<?php
+				if ($sth->errorCode() == "23000") {
+					echo "，該學生仍有課程尚未退選";
+				}
+				?>
+			</div>
+			<?php
+		} else {
+			?>
+			<div class="alert alert-success alert-dismissible" role="alert">
+				<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				已刪除學生 <?=htmlentities($D["student"][$_POST["delete"]]["name"])?>
+			</div>
+			<?php
+			unset($D["student"][$_POST["delete"]]);
+		}
 	} 
 }
 
