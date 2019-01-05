@@ -22,27 +22,33 @@ $res = [
 if (isset($_REQUEST["action"])) {
 	switch ($_REQUEST["action"]) {
 		case 'checklogin':
-			$res = $U;
+			$res = [
+				"result"=> "ok",
+				"data"=> $U
+			];
 			break;
 
 		case 'login':
 			require(__DIR__.'/func/Login.php');
 			$res = [
-				"result"=> Login($_REQUEST["type"], $_REQUEST["account"], $_REQUEST["password"])
+				"result"=> "ok",
+				"data"=> Login($_REQUEST["type"], $_REQUEST["account"], $_REQUEST["password"])
 			];
 			break;
 		
 		case 'logout':
 			require(__DIR__.'/func/Login.php');
 			$res = [
-				"result"=> Logout()
+				"result"=> "ok",
+				"data"=> Logout()
 			];
 			break;
 		
 		case 'search':
 			require(__DIR__.'/func/Elective.php');
 			$res = [
-				"result"=> (object)getSearchResult($_REQUEST["day"], $_REQUEST["period"])
+				"result"=> "ok",
+				"data"=> (object)getSearchResult($_REQUEST["day"], $_REQUEST["period"])
 			];
 			break;
 		
