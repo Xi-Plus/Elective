@@ -70,9 +70,39 @@ if (!$U["islogin"]) {
 		<?php
 	}
 }
-if (!isset($_GET["classid"]) && !isset($_GET["stuid"])) {
+if (isset($_GET["classid"])) {
+	$query = 'SELECT * FROM  `class` WHERE `classid` = :classid ';
+	$sth = $G["db"]->prepare($query);
+	$sth->bindValue(":classid", $_GET["classid"]);
+	$sth->execute();
+	$class = $sth->fetch(PDO::FETCH_ASSOC);
+	if ($class === false) {
+		?>
+		<div class="alert alert-danger alert-dismissible" role="alert">
+			<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			查無該課程
+		</div>
+		<?php
+		$showform = false;
+	}
+} else if (isset($_GET["stuid"])) {
+	$query = 'SELECT * FROM  `student` WHERE `stuid` = :stuid ';
+	$sth = $G["db"]->prepare($query);
+	$sth->bindValue(":stuid", $_GET["stuid"]);
+	$sth->execute();
+	$student = $sth->fetch(PDO::FETCH_ASSOC);
+	if ($student === false) {
+		?>
+		<div class="alert alert-danger alert-dismissible" role="alert">
+			<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			查無該學生
+		</div>
+		<?php
+		$showform = false;
+	}
+} else {
 	?>
-	<div class="alert alert-success alert-dismissible" role="alert">
+	<div class="alert alert-danger alert-dismissible" role="alert">
 		<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 		請提供課程編號或是學生編號
 	</div>
@@ -88,13 +118,8 @@ if ($showform) {
 	<form action="" method="post">
 	<?php
 	if (isset($_GET["classid"])) {
-		$query = 'SELECT * FROM  `class` WHERE `classid` = :classid ';
-		$sth = $G["db"]->prepare($query);
-		$sth->bindValue(":classid", $_GET["classid"]);
-		$sth->execute();
-		$class = $sth->fetch(PDO::FETCH_ASSOC);
 		?>
-		課程 <?=$class["classid"]?> <?=$class["name"]?> 學分數 <?=$class["credit"]?>
+		課程 <?=$class["classid"]?> <?=$class["name"]?> 學分數 <?=$class["credit"]?> 的選課表
 		<div class="table-responsive">
 			<table class="table">
 				<tr>
@@ -119,16 +144,16 @@ if ($showform) {
 					</tr>
 					<?php
 				}
+				if (count($D["elective"]) == 0) {
+					?>
+					<tr><td colspan="3">無學生選修這堂課</td></tr>
+					<?php
+				}
 				?>
 			</table>
 		</div>
 		<?php
 	} else if (isset($_GET["stuid"])) {
-		$query = 'SELECT * FROM  `student` WHERE `stuid` = :stuid ';
-		$sth = $G["db"]->prepare($query);
-		$sth->bindValue(":stuid", $_GET["stuid"]);
-		$sth->execute();
-		$student = $sth->fetch(PDO::FETCH_ASSOC);
 		?>
 		學生 <?=$student["stuid"]?> <?=$student["name"]?> 的選課表
 		<div class="table-responsive">
@@ -153,6 +178,11 @@ if ($showform) {
 							<button type="submit" name="delete" value="<?=$student["stuid"]?>-<?=$elective["classid"]?>" class="btn btn-danger btn-sm"><i class="fa fa-trash" aria-hidden="true"></i> 退選</button>
 						</td>
 					</tr>
+					<?php
+				}
+				if (count($D["elective"]) == 0) {
+					?>
+					<tr><td colspan="3">該學生無任何選修</td></tr>
 					<?php
 				}
 			}
