@@ -168,13 +168,17 @@ function Elective($classid) {
 	}
 }
 
-function Unelective($classid) {
+function Unelective($classid, $stuid=null) {
 	global $C, $G, $U;
+
+	if (is_null($stuid)) {
+		$stuid = $U["account"];
+	}
 
 	$elective = getElective();
 
 	$sth = $G["db"]->prepare('SELECT * FROM ( SELECT * FROM `elective` WHERE `stuid` = :stuid AND `classid` = :classid ) `elective` LEFT JOIN `class` ON `elective`.`classid` = `class`.`classid`');
-	$sth->bindValue(":stuid", $U["account"]);
+	$sth->bindValue(":stuid", $stuid);
 	$sth->bindValue(":classid", $classid);
 	$sth->execute();
 	$elective = $sth->fetch(PDO::FETCH_ASSOC);
@@ -182,7 +186,7 @@ function Unelective($classid) {
 		return ["result" => "not_found"];
 	} else {
 		$sth = $G["db"]->prepare("DELETE FROM `elective` WHERE `stuid` = :stuid AND `classid` = :classid");
-		$sth->bindValue(":stuid", $U["account"]);
+		$sth->bindValue(":stuid", $stuid);
 		$sth->bindValue(":classid", $classid);
 		$sth->execute();
 		return ["result"=> "success", "elective"=> $elective];
