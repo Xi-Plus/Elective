@@ -258,7 +258,7 @@ if ($showform) {
 						?></td>
 						<td><?=$class["credit"]?></td>
 						<td>
-							<a href="<?=$C["path"]?>/manageelective/?classid=<?=htmlentities($class["classid"])?>" target="_blank">選課表</a>&nbsp;&nbsp;&nbsp;
+							<a href="<?=$C["path"]?>/manageelective/?classid=<?=htmlentities($class["classid"])?>">選課表</a>&nbsp;&nbsp;&nbsp;
 							<button type="submit" name="delete" value="<?=$class["classid"]?>" class="btn btn-danger btn-sm"><i class="fa fa-trash" aria-hidden="true"></i> 刪除</button>
 						</td>
 					</tr>
